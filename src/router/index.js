@@ -1,19 +1,46 @@
 import { createRouter, createWebHistory } from "vue-router";
 
-// Pages
-import DashboardOverview from "@/pages/Dashboard/DashboardOverview.vue";
+// Auth
 import Login from "@/pages/Auth/Login.vue";
-// Optionally import Register, ForgotPassword later
+
+// Main Pages
+import DashboardOverview from "@/pages/Dashboard/DashboardOverview.vue";
+import POSIndex from "@/pages/POS/POSIndex.vue";
+import ManageOrders from "@/pages/Orders/ManageOrders.vue";
+import MenuItems from "@/pages/Menu/MenuItems.vue";
+import Stock from "@/pages/Inventory/Stock.vue";
+import SalesReport from "@/pages/Reports/SalesReport.vue";
 
 const routes = [
-  { path: "/", redirect: "/login" }, // redirect root to login (optional)
+  { path: "/", redirect: "/login" },
   { path: "/login", component: Login },
-  { path: "/dashboard", component: DashboardOverview },
+
+  // Protected Routes
+  {
+    path: "/dashboard",
+    component: DashboardOverview,
+    meta: { requiresAuth: true },
+  },
+  { path: "/pos", component: POSIndex, meta: { requiresAuth: true } },
+  { path: "/orders", component: ManageOrders, meta: { requiresAuth: true } },
+  { path: "/menu", component: MenuItems, meta: { requiresAuth: true } },
+  { path: "/inventory", component: Stock, meta: { requiresAuth: true } },
+  { path: "/reports", component: SalesReport, meta: { requiresAuth: true } },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+// Optional: Auth Guard (redirect if not logged in)
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem("token");
+  if (to.meta.requiresAuth && !token) {
+    next("/login");
+  } else {
+    next();
+  }
 });
 
 export default router;
