@@ -3,20 +3,20 @@
     <div class="p-6 space-y-6">
       <div class="flex justify-between items-center">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">Ingredient Management</h1>
-          <p class="text-sm text-gray-500">Track and manage all ingredients in your stock.</p>
+          <h1 class="text-2xl font-bold text-gray-800">Recipe Management</h1>
+          <p class="text-sm text-gray-500">Manage how each menu item is composed from ingredients.</p>
         </div>
         <button
           @click="openAddModal"
           class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded flex items-center gap-2"
         >
-          ➕ Add Ingredient
+          ➕ Add Recipe
         </button>
       </div>
 
       <!-- Placeholder content -->
       <div class="bg-white p-6 rounded-xl shadow text-gray-500">
-        Ingredient list will be displayed here.
+        Recipe list will be displayed here.
       </div>
     </div>
   </AppLayout>
@@ -26,6 +26,6 @@
 import AppLayout from '@/components/Common/AppLayout.vue'
 
 const openAddModal = () => {
-  console.log('Open Add Ingredient modal')
+  console.log('Open Add Recipe modal')
 }
 </script>
