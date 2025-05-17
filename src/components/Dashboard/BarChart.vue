@@ -1,28 +1,54 @@
-
+<!-- src/components/Dashboard/BarChart.vue -->
 <template>
-  <div class="bg-white p-4 rounded shadow">
-    <canvas ref="canvas"></canvas>
+  <div class="w-full h-96">
+    <Bar :data="chartData" :options="chartOptions" />
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
-import Chart from 'chart.js/auto'
+import { computed } from 'vue'
+import { Bar } from 'vue-chartjs'
+import {
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale
+} from 'chart.js'
 
-const props = defineProps(['data'])
-const canvas = ref(null)
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
-onMounted(() => {
-  new Chart(canvas.value, {
-    type: 'bar',
-    data: {
-      labels: props.data.labels,
-      datasets: [{
-        label: 'Accepted Orders',
-        data: props.data.values,
-        backgroundColor: '#facc15'
-      }]
-    }
-  })
+const props = defineProps({
+  labels: {
+    type: Array,
+    required: true
+  },
+  values: {
+    type: Array,
+    required: true
+  }
 })
+
+const chartData = computed(() => ({
+  labels: props.labels,
+  datasets: [
+    {
+      label: 'Top Orders',
+      data: props.values,
+      backgroundColor: '#6366F1'
+    }
+  ]
+}))
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'bottom'
+    }
+  }
+}
 </script>
