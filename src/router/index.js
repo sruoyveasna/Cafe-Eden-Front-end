@@ -2,6 +2,9 @@ import { createRouter, createWebHistory } from "vue-router";
 
 // Auth
 import Login from "@/pages/Auth/Login.vue";
+import Register from "@/pages/Auth/Register.vue";
+import ResetPassword from "@/pages/Auth/ResetPassword.vue";
+import ForgotPassword from "@/pages/Auth/ForgotPassword.vue";
 
 // Main Pages
 import DashboardOverview from "@/pages/Dashboard/DashboardOverview.vue";
@@ -23,6 +26,9 @@ import SalesReport from "@/pages/Reports/SalesReport.vue";
 const routes = [
   { path: "/", redirect: "/login" },
   { path: "/login", component: Login },
+  { path: "/register", component: Register },
+  { path: "/reset-password", component: ResetPassword },
+  { path: "/forgot-password", component: ForgotPassword },
 
   // Protected Routes
   {

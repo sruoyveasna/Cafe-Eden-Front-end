@@ -14,31 +14,34 @@
         </button>
       </div>
 
+      <!-- Success Message -->
+      <div v-if="successMessage"
+        class="bg-green-100 text-green-800 border border-green-300 rounded p-3 flex justify-between items-center max-w-xl">
+        <span>{{ successMessage }}</span>
+        <button @click="successMessage = ''" class="font-bold">✖</button>
+      </div>
+
       <!-- Table container -->
       <div class="rounded-xl shadow bg-white overflow-hidden">
-        <!-- Sticky Table Header -->
-        <table class="min-w-full text-sm text-gray-700">
-          <thead class="bg-purple-50 text-purple-800 font-semibold text-left sticky top-0 z-10">
-            <tr>
-              <th class="px-4 py-3">#</th>
-              <th class="px-4 py-3">Name</th>
-              <th class="px-4 py-3">Unit</th>
-              <th class="px-4 py-3">Created At</th>
-              <th class="px-4 py-3 text-center">Action</th>
-            </tr>
-          </thead>
-        </table>
-
-        <!-- Scrollable Body with Hidden Scrollbar -->
         <div class="max-h-[480px] overflow-y-auto custom-scroll">
           <table class="min-w-full text-sm text-gray-700">
+            <thead class="bg-purple-50 text-purple-800 font-semibold text-left sticky top-0 z-10">
+              <tr>
+                <th class="px-4 py-3 w-12">#</th>
+                <th class="px-4 py-3">Name</th>
+                <th class="px-4 py-3">Unit</th>
+                <th class="px-4 py-3">Created At</th>
+                <th class="px-4 py-3 text-center w-40">Action</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr v-for="(ingredient, index) in ingredients" :key="ingredient.id" class="border-t hover:bg-gray-50">
-                <td class="px-4 py-3">{{ index + 1 }}</td>
+              <tr v-for="(ingredient, index) in ingredients" :key="ingredient.id"
+                class="border-t hover:bg-gray-50 align-middle">
+                <td class="px-4 py-3 w-12">{{ index + 1 }}</td>
                 <td class="px-4 py-3">{{ ingredient.name }}</td>
                 <td class="px-4 py-3">{{ ingredient.unit }}</td>
                 <td class="px-4 py-3">{{ formatDate(ingredient.created_at) }}</td>
-                <td class="px-4 py-3 text-center">
+                <td class="px-4 py-3 text-center w-40">
                   <div class="flex justify-center gap-2">
                     <button
                       class="border border-blue-300 text-blue-600 hover:bg-blue-50 px-3 py-1 rounded-full text-sm font-medium transition"
@@ -47,7 +50,7 @@
                     </button>
                     <button
                       class="border border-red-300 text-red-600 hover:bg-red-50 px-3 py-1 rounded-full text-sm font-medium transition"
-                      @click="deleteIngredient(ingredient.id)">
+                      @click="confirmDelete(ingredient.id)">
                       Delete
                     </button>
                   </div>
@@ -59,37 +62,63 @@
       </div>
 
       <!-- Modal -->
-      <div v-if="openModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-        <div class="bg-white w-full max-w-md rounded-xl shadow-lg p-6 space-y-4">
-          <h2 class="text-lg font-bold text-gray-800">
-            {{ isEditing ? '✏️ Edit Ingredient' : '➕ Add Ingredient' }}
-          </h2>
+      <teleport to="body">
+        <div v-if="openModal" class="fixed inset-0 z-[999] flex items-center justify-center">
+          <!-- Overlay -->
+          <div class="absolute inset-0 bg-black bg-opacity-50 z-[998]"></div>
 
-          <div>
-            <label class="block text-sm font-medium mb-1">Name</label>
-            <input v-model="form.name" type="text"
-              class="w-full border rounded px-3 py-2 focus:ring focus:border-purple-500"
-              placeholder="e.g. Sugar, Milk" />
-          </div>
+          <!-- Modal Box -->
+          <div class="relative z-[999] bg-white w-full max-w-md rounded-xl shadow-lg p-6 space-y-4">
+            <h2 class="text-lg font-bold text-gray-800">
+              {{ isEditing ? '✏️ Edit Ingredient' : '➕ Add Ingredient' }}
+            </h2>
 
-          <div>
-            <label class="block text-sm font-medium mb-1">Unit</label>
-            <input v-model="form.unit" type="text"
-              class="w-full border rounded px-3 py-2 focus:ring focus:border-purple-500"
-              placeholder="e.g. kg, ml, pcs" />
-          </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">Name</label>
+              <input v-model="form.name" type="text"
+                class="w-full border rounded px-3 py-2 focus:ring focus:border-purple-500"
+                placeholder="e.g. Sugar, Milk" />
+            </div>
 
-          <div class="flex justify-end space-x-2 pt-4">
-            <button @click="closeModal" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300">
-              Cancel
-            </button>
-            <button @click="isEditing ? updateIngredient() : createIngredient()"
-              class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
-              {{ isEditing ? 'Update' : 'Save' }}
-            </button>
+            <div>
+              <label class="block text-sm font-medium mb-1">Unit</label>
+              <input v-model="form.unit" type="text"
+                class="w-full border rounded px-3 py-2 focus:ring focus:border-purple-500"
+                placeholder="e.g. kg, ml, pcs" />
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-4">
+              <button @click="closeModal" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300">
+                Cancel
+              </button>
+              <button @click="isEditing ? updateIngredient() : createIngredient()"
+                class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
+                {{ isEditing ? 'Update' : 'Save' }}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </teleport>
+
+      <!-- Delete Confirm Modal -->
+      <teleport to="body">
+        <div v-if="showConfirm" class="fixed inset-0 z-[999] flex items-center justify-center">
+          <!-- Dark overlay -->
+          <div class="absolute inset-0 bg-black bg-opacity-50 z-[998]" />
+
+          <!-- Modal content -->
+          <div class="relative z-[999] bg-white p-6 rounded-xl shadow-xl space-y-4 w-full max-w-sm text-center">
+            <h2 class="text-lg font-bold text-gray-800">⚠️ Confirm Deletion</h2>
+            <p class="text-sm text-gray-600">Are you sure you want to delete this ingredient?</p>
+            <div class="flex justify-center gap-4 pt-2">
+              <button @click="showConfirm = false"
+                class="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300">Cancel</button>
+              <button @click="deleteIngredient(ingredientToDelete)"
+                class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Yes, Delete</button>
+            </div>
+          </div>
+        </div>
+      </teleport>
     </div>
   </AppLayout>
 </template>
@@ -103,6 +132,9 @@ const ingredients = ref([])
 const openModal = ref(false)
 const isEditing = ref(false)
 const editingId = ref(null)
+const successMessage = ref('')
+const showConfirm = ref(false)
+const ingredientToDelete = ref(null)
 const form = ref({ name: '', unit: '' })
 
 const loadIngredients = async () => {
@@ -137,8 +169,10 @@ async function createIngredient() {
   }
   try {
     await api.post('/ingredients', form.value)
+    successMessage.value = '✅ Ingredient added successfully!'
     closeModal()
     await loadIngredients()
+    setTimeout(() => successMessage.value = '', 3000)
   } catch (err) {
     console.error('Create failed:', err)
   }
@@ -147,21 +181,29 @@ async function createIngredient() {
 async function updateIngredient() {
   try {
     await api.put(`/ingredients/${editingId.value}`, form.value)
+    successMessage.value = '✅ Ingredient updated successfully!'
     closeModal()
     await loadIngredients()
+    setTimeout(() => successMessage.value = '', 3000)
   } catch (err) {
     console.error('Update failed:', err)
   }
 }
 
+function confirmDelete(id) {
+  ingredientToDelete.value = id
+  showConfirm.value = true
+}
+
 async function deleteIngredient(id) {
-  if (confirm('Are you sure you want to delete this ingredient?')) {
-    try {
-      await api.delete(`/ingredients/${id}`)
-      await loadIngredients()
-    } catch (err) {
-      console.error('Delete failed:', err)
-    }
+  showConfirm.value = false
+  try {
+    await api.delete(`/ingredients/${id}`)
+    successMessage.value = '✅ Ingredient deleted successfully!'
+    await loadIngredients()
+    setTimeout(() => successMessage.value = '', 3000)
+  } catch (err) {
+    console.error('Delete failed:', err)
   }
 }
 

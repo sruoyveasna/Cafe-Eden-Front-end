@@ -13,21 +13,14 @@
 
         <!-- Menu Dropdown -->
         <div>
-          <button
-            @click="isMenuOpen = !isMenuOpen"
-            class="flex items-center justify-between w-full py-2 px-3 rounded hover:bg-purple-50 text-sm font-medium text-gray-700"
-          >
+          <button @click="isMenuOpen = !isMenuOpen"
+            class="flex items-center justify-between w-full py-2 px-3 rounded hover:bg-purple-50 text-sm font-medium text-gray-700">
             <span class="flex items-center gap-2">
               <span class="text-lg">🍔</span>
               <span>Menu</span>
             </span>
-            <svg
-              :class="{ 'rotate-180': isMenuOpen }"
-              class="w-4 h-4 transition-transform"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg :class="{ 'rotate-180': isMenuOpen }" class="w-4 h-4 transition-transform" fill="none"
+              stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
@@ -38,31 +31,24 @@
         </div>
 
         <!-- Inventory Dropdown -->
-<div>
-  <button
-    @click="isInventoryOpen = !isInventoryOpen"
-    class="flex items-center justify-between w-full py-2 px-3 rounded hover:bg-purple-50 text-sm font-medium text-gray-700"
-  >
-    <span class="flex items-center gap-2">
-      <span class="text-lg">📦</span>
-      <span>Inventory</span>
-    </span>
-    <svg
-      :class="{ 'rotate-180': isInventoryOpen }"
-      class="w-4 h-4 transition-transform"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-    </svg>
-  </button>
-  <div v-if="isInventoryOpen" class="ml-6 space-y-0.5">
-    <SidebarItem to="/inventory/stock" label="Stock" icon="📦" small />
-    <SidebarItem to="/inventory/recipe" label="Recipe" icon="🧪" small />
-    <SidebarItem to="/inventory/ingredient" label="Ingredient" icon="🥬" small />
-  </div>
-</div>
+        <div>
+          <button @click="isInventoryOpen = !isInventoryOpen"
+            class="flex items-center justify-between w-full py-2 px-3 rounded hover:bg-purple-50 text-sm font-medium text-gray-700">
+            <span class="flex items-center gap-2">
+              <span class="text-lg">📦</span>
+              <span>Inventory</span>
+            </span>
+            <svg :class="{ 'rotate-180': isInventoryOpen }" class="w-4 h-4 transition-transform" fill="none"
+              stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div v-if="isInventoryOpen" class="ml-6 space-y-0.5">
+            <SidebarItem to="/inventory/stock" label="Stock" icon="📦" small />
+            <SidebarItem to="/inventory/recipe" label="Recipe" icon="🧪" small />
+            <SidebarItem to="/inventory/ingredient" label="Ingredient" icon="🥬" small />
+          </div>
+        </div>
 
         <SidebarItem to="/reports" label="Analytic" icon="📈" />
       </nav>
@@ -105,5 +91,3 @@ watchEffect(() => {
   isInventoryOpen.value = path.startsWith('/inventory/')
 })
 </script>
-
-

@@ -68,62 +68,72 @@
       </div>
 
       <!-- Add Modal -->
-      <div v-if="openModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-        <div class="bg-white w-full max-w-md p-6 rounded-xl shadow space-y-4">
-          <h2 class="text-lg font-bold text-gray-700">➕ Add Ingredient to Recipe</h2>
+      <teleport to="body">
+        <div v-if="openModal" class="fixed inset-0 z-[999] flex items-center justify-center">
+          <!-- Overlay -->
+          <div class="absolute inset-0 bg-black bg-opacity-50 z-[998]"></div>
 
-          <div class="space-y-3">
-            <div>
-              <label class="text-sm block mb-1">Ingredient</label>
-              <select v-model="form.ingredient_id" class="w-full border px-3 py-2 rounded">
-                <option disabled value="">-- Select Ingredient --</option>
-                <option v-for="ingredient in ingredients" :key="ingredient.id" :value="ingredient.id">
-                  {{ ingredient.name }} ({{ ingredient.unit }})
-                </option>
-              </select>
+          <div class="bg-white relative z-[999] w-full max-w-md p-6 rounded-xl shadow space-y-4">
+            <h2 class="text-lg font-bold text-gray-700">➕ Add Ingredient to Recipe</h2>
+
+            <div class="space-y-3">
+              <div>
+                <label class="text-sm block mb-1">Ingredient</label>
+                <select v-model="form.ingredient_id" class="w-full border px-3 py-2 rounded focus:ring-purple-300">
+                  <option disabled value="">-- Select Ingredient --</option>
+                  <option v-for="ingredient in availableIngredients" :key="ingredient.id" :value="ingredient.id">
+                    {{ ingredient.name }} ({{ ingredient.unit }})
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <label class="text-sm block mb-1">Quantity</label>
+                <input type="number" step="0.01" v-model="form.quantity"
+                  class="w-full border px-3 py-2 rounded focus:ring-purple-300" placeholder="e.g. 0.5" />
+              </div>
             </div>
 
-            <div>
-              <label class="text-sm block mb-1">Quantity</label>
-              <input type="number" step="0.01" v-model="form.quantity"
-                class="w-full border px-3 py-2 rounded focus:ring-purple-300" placeholder="e.g. 0.5" />
+            <div class="flex justify-end gap-2 pt-4">
+              <button @click="closeModal" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Cancel</button>
+              <button @click="submitRecipe"
+                class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition">
+                Save
+              </button>
             </div>
-          </div>
-
-          <div class="flex justify-end gap-2 pt-4">
-            <button @click="closeModal" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Cancel</button>
-            <button @click="submitRecipe"
-              class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition">
-              Save
-            </button>
           </div>
         </div>
-      </div>
+      </teleport>
 
       <!-- Confirm Delete Modal -->
-      <div v-if="showConfirm" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-        <div class="bg-white w-full max-w-sm p-6 rounded-xl shadow space-y-4 text-center">
-          <h2 class="text-lg font-semibold text-gray-800">Confirm Deletion</h2>
-          <p class="text-sm text-gray-600">
-            Are you sure you want to remove this ingredient from the recipe?
-          </p>
-          <div class="flex justify-center gap-4 pt-4">
-            <button @click="cancelDelete" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">
-              Cancel
-            </button>
-            <button @click="confirmDelete" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
-              Yes, Delete
-            </button>
+      <teleport to="body">
+        <div v-if="showConfirm" class="fixed inset-0 z-[999] flex items-center justify-center">
+          <!-- Overlay -->
+          <div class="absolute inset-0 bg-black bg-opacity-50 z-[998]"></div>
+
+          <div class="bg-white relative z-[999] w-full max-w-sm p-6 rounded-xl shadow space-y-4 text-center">
+            <h2 class="text-lg font-semibold text-gray-800">Confirm Deletion</h2>
+            <p class="text-sm text-gray-600">
+              Are you sure you want to remove this ingredient from the recipe?
+            </p>
+            <div class="flex justify-center gap-4 pt-4">
+              <button @click="cancelDelete" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">
+                Cancel
+              </button>
+              <button @click="confirmDelete" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                Yes, Delete
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </teleport>
     </div>
   </AppLayout>
 </template>
 
 <script setup>
 import AppLayout from '@/components/Common/AppLayout.vue'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import api from '@/plugins/axios'
 
 const menuItems = ref([])
@@ -152,7 +162,16 @@ const loadAll = async () => {
   menuItems.value = menuRes.data
   ingredients.value = ingRes.data
   recipes.value = recipeRes.data
+  if (!selectedMenuItemId.value && menuItems.value.length > 0) {
+    selectedMenuItemId.value = menuItems.value[0].id
+    filterRecipes()
+  }
 }
+
+const availableIngredients = computed(() => {
+  const usedIds = filteredRecipes.value.map(r => r.ingredient_id)
+  return ingredients.value.filter(i => !usedIds.includes(i.id))
+})
 
 function filterRecipes() {
   filteredRecipes.value = recipes.value.filter(
@@ -165,7 +184,10 @@ function openAddModal() {
     alert('Please select a menu item first.')
     return
   }
-  form.value = { ingredient_id: '', quantity: '' }
+  form.value = {
+    ingredient_id: availableIngredients.value.length > 0 ? availableIngredients.value[0].id : '',
+    quantity: ''
+  }
   openModal.value = true
 }
 
