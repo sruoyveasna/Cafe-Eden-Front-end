@@ -15,7 +15,8 @@
     "current_password": "ពាក្យសម្ងាត់បច្ចុប្បន្ន",
     "new_password": "ពាក្យសម្ងាត់ថ្មី",
     "confirm_password": "បញ្ជាក់ពាក្យសម្ងាត់ថ្មី",
-    "select": "ជ្រើសរើស"
+    "select": "ជ្រើសរើស",
+    "edit_profile": "កែប្រែប្រវត្តិរូប"
   },
   "common": {
     "cancel": "បោះបង់",
