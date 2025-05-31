@@ -5,7 +5,7 @@ import { useToast } from "vue-toastification"; // Optional: only if you're using
 const toast = useToast();
 
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: "http://188.166.196.32/api",
 });
 
 // Add token to request headers
