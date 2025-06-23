@@ -253,6 +253,7 @@ const handleCashPayment = async () => {
 
 const startPollingBakong = (md5) => {
   if (polling.value) clearInterval(polling.value);
+  let attempts = 0;
   polling.value = setInterval(async () => {
     try {
       const res = await api.get("/bakong/verify/md5", { params: { md5 } });
@@ -292,11 +293,15 @@ const startPollingBakong = (md5) => {
           clearCart();
           emit("success");
         }, 300);
+      } else if (++attempts > 300) {
+        clearInterval(polling.value);
+        polling.value = null;
+        toast.error("⏰ Payment timeout");
       }
     } catch (err) {
       console.warn("Polling failed:", err?.response?.data || err.message);
       // Implement more robust error handling or retry logic if needed for polling
     }
-  }, 5000);
+  }, 1000);
 };
 </script>

@@ -89,6 +89,7 @@ const generateKHQR = async () => {
 
 const pollBakong = (md5) => {
   let attempts = 0;
+  // Poll more frequently to detect success sooner
   pollingInterval = setInterval(async () => {
     try {
       const res = await axios.get("/bakong/verify/md5", { params: { md5 } });
@@ -99,14 +100,14 @@ const pollBakong = (md5) => {
         clearInterval(pollingInterval);
         toast.success("🎉 KHQR payment confirmed");
         emit("bakongSuccess");
-      } else if (++attempts > 60) {
+      } else if (++attempts > 300) {
         clearInterval(pollingInterval);
         toast.error("⏰ Payment timeout");
       }
     } catch (err) {
       console.warn("KHQR polling error:", err);
     }
-  }, 3000);
+  }, 1000);
 };
 
 watch(() => props.amount, (val) => {
