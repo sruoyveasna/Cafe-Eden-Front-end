@@ -265,7 +265,8 @@
     "category": "Category",
     "actions": "Actions",
     "empty": "No menu items found.",
-    "confirmDelete": "Are you sure you want to delete '{name}'?"
+    "confirmDelete": "Are you sure you want to delete '{name}'?",
+    "add_to_cart": "Add to Cart"
   },
 
   "add_menu": {

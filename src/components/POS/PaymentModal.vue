@@ -37,7 +37,7 @@
           @pay="submitPayment"
         />
 
-        <!-- Receipt Print Component - IMPORTANT: Only rendered when orderId is set for printing -->
+        <!-- Receipt Print (only when orderId is set) -->
         <ReceiptPrint
           v-if="orderId"
           :cart="cart"
@@ -81,8 +81,6 @@ import api from "@/plugins/axios";
 import { usePOSStore } from "@/store/pos";
 import { useToast } from "vue-toastification";
 import QrcodeVue from "qrcode.vue";
-
-// Import child components
 import PaymentMethods from "@/components/POS/PaymentMethods.vue";
 import DiscountSection from "@/components/POS/DiscountSection.vue";
 import CartSummary from "@/components/POS/CartSummary.vue";
@@ -90,11 +88,10 @@ import ReceiptPrint from "@/components/POS/ReceiptPrint.vue";
 
 const props = defineProps({ visible: Boolean });
 const emit = defineEmits(["close", "success"]);
-
 const { cart, clearCart } = usePOSStore();
 const toast = useToast();
 
-// Reactive state variables
+// State
 const user = ref(null);
 const selectedMethod = ref(null);
 const amount = ref("");
@@ -103,22 +100,20 @@ const discount = ref(null);
 const manualDiscount = ref(0);
 const discountError = ref("");
 const methodError = ref("");
-const orderId = ref(null); // Initialized as null, will be set to a number when ready to print
-
+const orderId = ref(null);
 const selectedCurrency = ref("USD");
 const qrCode = ref(null);
 const showQrPopup = ref(false);
 const polling = ref(null);
+const bakongMd5 = ref(null); // store current KHQR MD5
 
-// Computed properties
+// Computed
 const currencyLogo = computed(() =>
   selectedCurrency.value === "KHR" ? "/khr-logo.png" : "/usd-logo.png"
 );
-
 const total = computed(() =>
   cart.reduce((sum, item) => sum + item.qty * parseFloat(item.price), 0)
 );
-
 const discountedTotal = computed(() => {
   let val = total.value;
   if (discount.value?.type === "percent") val *= 1 - discount.value.value / 100;
@@ -126,13 +121,11 @@ const discountedTotal = computed(() => {
   if (manualDiscount.value > 0) val *= 1 - manualDiscount.value / 100;
   return parseFloat(val.toFixed(2));
 });
-
 const changeAmount = computed(() => {
   if (selectedMethod.value !== "cash") return "0.00";
   const paid = parseFloat(amount.value || 0);
   return paid > discountedTotal.value ? (paid - discountedTotal.value).toFixed(2) : "0.00";
 });
-
 const discountText = computed(() =>
   discount.value?.type === "percent"
     ? `${discount.value.value}%`
@@ -141,7 +134,7 @@ const discountText = computed(() =>
     : ""
 );
 
-// Lifecycle hooks
+// Lifecycle
 onMounted(async () => {
   try {
     const res = await api.get("/me");
@@ -150,15 +143,13 @@ onMounted(async () => {
     console.error("Load user failed", e);
   }
 });
-
-// Watchers for reactivity
 watch(cart, (val) => val.length === 0 && close());
 watch(showQrPopup, (v) => (document.body.style.overflow = v ? "hidden" : ""));
 
 // Methods
 const close = () => {
   emit("close");
-  orderId.value = null; // IMPORTANT: Reset orderId when modal closes to ensure receipt is removed from DOM
+  orderId.value = null; // Hide receipt after close
 };
 
 const selectMethod = (m) => {
@@ -208,6 +199,7 @@ const submitPayment = async () => {
         currency: selectedCurrency.value,
       });
       qrCode.value = qrRes.data.qr_string;
+      bakongMd5.value = qrRes.data.md5; // store md5 for polling
       showQrPopup.value = true;
       toast.info("✅ KHQR generated. Waiting...");
       startPollingBakong(qrRes.data.md5);
@@ -224,9 +216,8 @@ const handleCashPayment = async () => {
       items: cart.map((i) => ({ menu_item_id: i.id, quantity: i.qty })),
       code: promoCode.value || null,
     });
-
     const rawOrderId = orderRes.data.id;
-    orderId.value = ((rawOrderId - 1) % 200) + 1; // Set orderId to a number, making ReceiptPrint visible
+    orderId.value = ((rawOrderId - 1) % 200) + 1;
 
     await api.post("/payments", {
       order_id: rawOrderId,
@@ -236,14 +227,14 @@ const handleCashPayment = async () => {
       note: `Paid via cash${promoCode.value ? ` (Code: ${promoCode.value})` : ""}`,
     });
 
-    await nextTick(); // Ensures the ReceiptPrint component is fully rendered before printing
+    await nextTick();
     setTimeout(() => {
       clearCart();
       window.onafterprint = () => {
-          location.reload(); // Optional: Reloads the page after printing, adjust as per your app flow
-          orderId.value = null; // IMPORTANT: Reset orderId to hide the receipt component after the print dialog closes
+        location.reload();
+        orderId.value = null;
       };
-      window.print(); // Triggers the browser's print dialog
+      window.print();
     }, 200);
   } catch (error) {
     console.error("Cash payment failed:", error);
@@ -256,21 +247,25 @@ const startPollingBakong = (md5) => {
   let attempts = 0;
   polling.value = setInterval(async () => {
     try {
+      // API now returns just one transaction object!
       const res = await api.get("/bakong/verify/md5", { params: { md5 } });
-      const txn = res.data.results?.find(
-        (r) => r.raw_response?.responseCode === 0 && r.raw_response?.data
-      );
-      if (txn) {
+      const txn = res.data.result;
+      if (
+        txn &&
+        txn.md5 === md5 &&
+        txn.raw_response?.responseCode === 0 &&
+        txn.raw_response?.data
+      ) {
         clearInterval(polling.value);
         polling.value = null;
 
+        // Place order & payment in your DB
         const orderRes = await api.post("/orders", {
           items: cart.map((i) => ({ menu_item_id: i.id, quantity: i.qty })),
           code: promoCode.value || null,
         });
-
         const rawOrderId = orderRes.data.id;
-        orderId.value = ((rawOrderId - 1) % 200) + 1; // Set orderId to a number, making ReceiptPrint visible
+        orderId.value = ((rawOrderId - 1) % 200) + 1;
 
         await api.post("/payments", {
           order_id: rawOrderId,
@@ -283,13 +278,13 @@ const startPollingBakong = (md5) => {
         toast.success("✅ Payment confirmed!");
         showQrPopup.value = false;
 
-        await nextTick(); // Ensures the ReceiptPrint component is fully rendered before printing
+        await nextTick();
         setTimeout(() => {
           window.onafterprint = () => {
-              location.reload(); // Optional: Reloads the page after printing
-              orderId.value = null; // IMPORTANT: Reset orderId to hide the receipt component after the print dialog closes
+            location.reload();
+            orderId.value = null;
           };
-          window.print(); // Triggers the browser's print dialog
+          window.print();
           clearCart();
           emit("success");
         }, 300);
@@ -300,8 +295,7 @@ const startPollingBakong = (md5) => {
       }
     } catch (err) {
       console.warn("Polling failed:", err?.response?.data || err.message);
-      // Implement more robust error handling or retry logic if needed for polling
     }
-  }, 1000);
+  }, 2000);
 };
 </script>
